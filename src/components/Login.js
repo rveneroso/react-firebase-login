@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import "./login.css";
-import { auth } from '../firebase/firebase'; // Adjust the path if necessary
+import { auth } from '../firebase/firebase';
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 export default class Login extends Component {
@@ -12,6 +12,7 @@ export default class Login extends Component {
 
     handleLogin = (e) => {
         e.preventDefault();
+        this.props.onLogin(this.state.email, this.state.password);
         const { email, password } = this.state;
         console.log('Attempting to sign in with', email, password, auth);
         signInWithEmailAndPassword(auth, email, password)

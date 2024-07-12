@@ -12,6 +12,9 @@ import CadastrarLivros from "./components/CadastrarLivros";
 import Login from "./components/Login";
 import NotFound from "./components/NotFound";
 import SimpleStorage from "react-simple-storage";
+import { auth } from './firebase/firebase'; 
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+
 
 class App extends Component {
   state = {
@@ -44,23 +47,43 @@ class App extends Component {
     }
   };
 
-  componentDidMount() {
-    this.setState({
-      isAuthenticated: false,
-    });
-  }
+  onLogin = (email, password) => {
+    signInWithEmailAndPassword(auth, email, password)
+        .then((userCredential) => {
+            this.setState({ isAuthenticated: true });
+            console.log('User logged in:', userCredential.user);
+        })
+        .catch((error) => {
+            console.error('Login error:', error);
+        });
+};
+
+onLogout = () => {
+    signOut(auth)
+        .then(() => {
+            this.setState({ isAuthenticated: false });
+            console.log('User logged out');
+        })
+        .catch((error) => {
+            console.error('Logout error:', error);
+        });
+};
+
 
   render() {
     return (
       <Router>
         <SimpleStorage parent={this} />
-        <Header isAuthenticated={this.state.isAuthenticated} />
+        <Header 
+          isAuthenticated={this.state.isAuthenticated}
+          onLogout={this.onLogout}
+          />
         <Switch>
           <Route
             exact
             path="/"
             render={() =>
-              this.state.isAuthenticated === false ? (
+              ! this.state.isAuthenticated ? (
                 <TabelaHome livros={this.state.livros} />
               ) : (
                 <TabelaLivros
@@ -80,7 +103,13 @@ class App extends Component {
               />
             )}
           />
-          <Route exact path="/login" render={() => <Login />} />
+          <Route exact path="/login" 
+            render={() => 
+              !this.state.isAuthenticated
+              ? (<Login onLogin={this.onLogin} />)
+              : (<Redirect to="/" />)
+            }
+            />
           <Route
             exact
             path="/editar/:isbnLivro"
